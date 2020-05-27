@@ -59,8 +59,73 @@ def _preprocess_data(data):
     # ---------------------------------------------------------------
 
     # ----------- Replace this code with your own preprocessing steps --------
-    predict_vector = feature_vector_df[['Pickup Lat','Pickup Long',
-                                        'Destination Lat','Destination Long']]
+    
+    dftest = feature_vector_df.copy()
+    
+    dftest = dftest.drop(['Precipitation in millimeters'],axis=1)
+    
+    dftest.columns = [col.replace(" ", "_") for col in dftest.columns]
+    
+    dftest = dftest.drop(['Order_No','User_Id','Vehicle_Type','Platform_Type',
+              'Personal_or_Business','Placement_-_Weekday_(Mo_=_1)',
+              'Placement_-_Time','Confirmation_-_Day_of_Month','Confirmation_-_Weekday_(Mo_=_1)',
+              'Confirmation_-_Time','Arrival_at_Pickup_-_Weekday_(Mo_=_1)', 'Temperature',
+            'Pickup_-_Time','Pickup_-_Weekday_(Mo_=_1)',
+              'Rider_Id', 'Arrival_at_Pickup_-_Day_of_Month', 
+            'Pickup_-_Day_of_Month',
+                       'Placement_-_Day_of_Month'],axis=1)
+    
+    dftest_Arrival_at_Pickup_Time_hr = []
+
+    #Arrival_at_Pickup_Time_min = []
+    #Arrival_at_Pickup_Time_sec = []
+
+    for t in range(len(dftest)):
+    
+        # Split the timestamp at ':'
+        time_spl= dftest['Arrival_at_Pickup_-_Time'][t].split(':')
+    
+        # The 'seconds' part still has the 'AM and PM'. eg: '14 AM'
+        time_sec= time_spl[-1].split()
+    
+        #Arrival_at_Pickup_Time_min.append(int(time_spl[1]))
+        #Arrival_at_Pickup_Time_sec.append(int(time_sec[0]))
+    
+        # Check if its 'AM' and if the first element is 12. If it is 12
+        # then append 0 which corresponds to 12 AM.
+        if (time_sec[1] == 'AM') and (int(time_spl[0]) == 12):
+            dftest_Arrival_at_Pickup_Time_hr.append(0)
+    
+        # Check if its 'PM' and if the first element is 12. If it is 12
+        # then append 12 which corresponds to 12 PM.
+        elif (time_sec[1] == 'PM') and (int(time_spl[0]) == 12):
+            dftest_Arrival_at_Pickup_Time_hr.append(12)
+    
+        # Check if its 'AM'. If it is, then leave it as is, because it corresponds to 
+        # AM hours.
+        elif (time_sec[1] == 'AM'):
+            dftest_Arrival_at_Pickup_Time_hr.append(int(time_spl[0]))
+    
+        # Else add 12 to the hour to convert it to 24-hour format
+        else:
+            dftest_Arrival_at_Pickup_Time_hr.append(int(time_spl[0]) + 12)
+
+    # Insert the converted hour in place of the timestamp
+    dftest.insert(0, 'Arrival_at_Pickup_-_Time_Hours', dftest_Arrival_at_Pickup_Time_hr, True)
+    dftest.drop('Arrival_at_Pickup_-_Time', axis = 1, inplace = True)
+    
+    Xtest = dftest
+    
+    from sklearn.preprocessing import StandardScaler
+    
+    scaler = StandardScaler()
+    
+    Xtest_scaled = scaler.fit_transform(Xtest)
+    
+    Xtest_standardise = pd.DataFrame(Xtest_scaled,columns=Xtest.columns)
+    
+    predict_vector = Xtest_standardise.copy()
+    
     # ------------------------------------------------------------------------
 
     return predict_vector
