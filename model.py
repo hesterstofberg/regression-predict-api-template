@@ -73,7 +73,8 @@ def _preprocess_data(data):
             'Pickup_-_Time','Pickup_-_Weekday_(Mo_=_1)',
               'Rider_Id', 'Arrival_at_Pickup_-_Day_of_Month', 
             'Pickup_-_Day_of_Month',
-                       'Placement_-_Day_of_Month'],axis=1)
+                       'Placement_-_Day_of_Month','No_Of_Orders','Age','Average_Rating','No_of_Ratings'],axis=1)
+    #import pdb; pdb.set_trace()
     
     dftest_Arrival_at_Pickup_Time_hr = []
 
@@ -114,6 +115,8 @@ def _preprocess_data(data):
     dftest.insert(0, 'Arrival_at_Pickup_-_Time_Hours', dftest_Arrival_at_Pickup_Time_hr, True)
     dftest.drop('Arrival_at_Pickup_-_Time', axis = 1, inplace = True)
     
+    #import pdb; pdb.set_trace()
+    
     Xtest = dftest
     
     from sklearn.preprocessing import StandardScaler
@@ -123,6 +126,7 @@ def _preprocess_data(data):
     Xtest_scaled = scaler.fit_transform(Xtest)
     
     Xtest_standardise = pd.DataFrame(Xtest_scaled,columns=Xtest.columns)
+    #import pdb; pdb.set_trace()
     
     predict_vector = Xtest_standardise.copy()
     
@@ -169,4 +173,4 @@ def make_prediction(data, model):
     # Perform prediction with model and preprocessed data.
     prediction = model.predict(prep_data)
     # Format as list for output standerdisation.
-    return prediction[0].tolist()
+    return prediction.tolist()
